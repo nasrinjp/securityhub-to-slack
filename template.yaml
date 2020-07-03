@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Notify findings of Security Hub to Slack channel.
+Globals:
+  Function:
+    Timeout: 60
+
+Parameters:
+  ParameterNameForSlackUrl:
+    Type: String
+    Description: Specify the name of SSM Parameter Store for Slack URL.
+
+Resources:
+  NotifySlackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions
+      Handler: securityhub-to-slack.lambda_handler
+      Runtime: python3.8
+      Description: "Notify findings of Security Hub to Slack channel."
+      Environment:
+        Variables:
+          parameter_store_name_for_slack_url: !Ref ParameterNameForSlackUrl
+      Events:
+        FromSecurityHub:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+                - aws.securityhub
+              detail-type:
+                - Security Hub Findings - Imported
+              # resources:
+              #   - !Sub arn:aws:securityhub:${AWS::Region}:${AWS::AccountId}:action/custom/SendToSlack
+      Role: !GetAtt NotifySlackLambdaRole.Arn
+
+  NotifySlackLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  NotifySlackLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: logs:CreateLogGroup
+            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${NotifySlackFunction}:*
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource:
+              - "*"
+      PolicyName: !Sub ${AWS::StackName}-${NotifySlackFunction}-policy
+      Roles:
+        - !Ref NotifySlackLambdaRole
