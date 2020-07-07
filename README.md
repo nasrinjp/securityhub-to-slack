@@ -22,12 +22,6 @@ aws ssm put-parameter \
     --overwrite
 ```
 
-### Variables examples
-
-* parameter_store_name_for_slack_url
-    * Specify the name of SSM Parameter Store that contains Slack URL.
-    * Example: slack_url/workspacename/channel
-
 ## Build
 To build, execute the following command.  
 
@@ -41,3 +35,9 @@ To deploy, execute the following command.
 ```
 sam deploy --guided
 ```
+
+### Variables examples
+
+* parameter_store_name_for_slack_url
+    * Specify the name of SSM Parameter Store that contains Slack URL.
+    * Example: slack_url/workspacename/channel

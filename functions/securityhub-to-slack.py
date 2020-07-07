@@ -66,7 +66,7 @@ def lambda_handler(event, context):
             "pretext": f"*AWS SecurityHub finding in {region} for Account: {account} *",
             "color": color,
             "title": finding,
-            "title_link": f"{console_url}/home?region={region}#/findings?search=id%3D{message_id}",
+            "title_link": f"{console_url}/home?region={region}#/findings",
             "text": finding_description,
             "fields": [
                 {
